@@ -149,7 +149,8 @@ u8 EC20_CONNECT_MQTT_SERVER(u8 *PRODUCTKEY,u8 *DEVICENAME,u8 *DEVICESECRET)
 //    //订阅到阿里云
     memset(AtStrBuf,0,BUFLEN);
 //    sprintf(AtStrBuf,"AT+QMTSUB=0,1,\"testtopic/#\",0 \r\n");
-	sprintf(AtStrBuf,"AT+QMTSUB=1,1,\"testtopic/#\",0 \r\n");
+//	sprintf(AtStrBuf,"AT+QMTSUB=1,1,\"testtopic/#\",0 \r\n");
+	sprintf(AtStrBuf,"AT+QMTSUB=1,1,\"serverMsg\",0 \r\n");
 //    sprintf(AtStrBuf,"AT+QMTSUB=0,1,\"/%s/%s/user/get\",0 \r\n",PRODUCTKEY,DEVICENAME);
 //    if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTSUB: 0,1,0,1",1000))	 return 9;
 //	if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTSUB: 0,1,0,0",1000))	 return 9;
@@ -201,7 +202,8 @@ u8 EC20_MQTT_SEND_DATA_qqq(u8 *DATA)
     memset(AtStrBuf,0,BUFLEN); //发送数据命令
     //AT+QMTPUB=0,0,0,0,"/sys/a18dtRetCT0/BC26TEST/thing/event/property/post"
 //    sprintf(AtStrBuf,"AT+QMTPUB=1,0,0,0,\"/sys/%s/%s/thing/event/property/post\"\r\n",PRODUCTKEY,DEVICENAME);
-    sprintf(AtStrBuf,"AT+QMTPUBEX=1,0,0,0,\"testtopic/1\"");
+//    sprintf(AtStrBuf,"AT+QMTPUBEX=1,0,0,0,\"testtopic/1\"");
+	sprintf(AtStrBuf,"AT+QMTPUBEX=1,0,0,0,\"boxMsg\"");
 	if(EC20_send_cmd((u8 *)AtStrBuf,">",100))             return 1;
     if(EC20_send_cmd(DATA,NULL,0))                  return 2;
     if(EC20_send_cmd((u8 *)0x1A,(u8 *)"OK",1500))   return 3;

@@ -21,7 +21,7 @@ typedef struct Struct_Platform_Command
 	uint8_t  parse_controller_id;
 	uint8_t  parse_circuit_id;
 	uint8_t  parse_start_component_id;
-	uint16_t parse_end_component_id;
+	uint16_t parse_count;
 	uint16_t parse_crc;
 } Platform_Command;
 #pragma pack() // 恢复默认字节对齐
@@ -49,12 +49,15 @@ union U16ToU8Array
   unsigned char u8array[2];
 };
 
-u8 json_start, json_end, json_parse[256];
-u8 RS485SEND[256], RS485RECV[256],RS485_received = 0, RS485SENDFLAG=0, rs485cnt, RS485SendLength=0;
-u8 MQTTSendFlag=0, MQTTSend[256];
+u8 json_start, json_end, json_parse[256],json_send[512];
+u8 RS485SEND[56], RS485RECV[56],RS485_received = 0, RS485SENDFLAG=0, rs485cnt, RS485SendLength=0;
+u8 MQTTSendFlag=0, MQTTSend[512];
+int MQTTSendCount;
 Platform_Command p_command;
 RS485_Command rs_command;
-char print[256];
+char print[512];
+char json_raw_data[512];
+char num[2];
 
 void BSP_init(void)
 {
@@ -161,13 +164,13 @@ void parsePlatformJson(char * pMsg)
 	p_command.parse_start_component_id = atoi(pSub->valuestring);
 
  // get sub object
-    pSub = cJSON_GetObjectItem(pJson, "end_component_id");
+    pSub = cJSON_GetObjectItem(pJson, "count");
     if(NULL == pSub)
     {
         // get sub object faild
     }
 //	printf("end_component_id : %s\r\n", pSub->valuestring);
-	p_command.parse_end_component_id = atoi(pSub->valuestring);
+	p_command.parse_count = atoi(pSub->valuestring);
 	
 
     cJSON_Delete(pJson);
@@ -177,19 +180,25 @@ void parsePlatformJson(char * pMsg)
 void getPlatformJson(void)
 {
 	
-	if((strstr((const char*)USART2_RX_BUF,"{"))!=NULL)
+	
+	if((strstr((const char*)USART2_RX_BUF,"raw_data"))==NULL)
 	{
-		if((strstr((const char*)USART2_RX_BUF,"}"))!=NULL)
+		if((strstr((const char*)USART2_RX_BUF,"{"))!=NULL)
 		{
-			json_start = strStr((const char*)USART2_RX_BUF, "{");
-			json_end = strStr((const char*)USART2_RX_BUF, "}");
-			
-			memcpy(json_parse,USART2_RX_BUF+json_start,json_end-json_start+1);
-			RS485SENDFLAG=1;
+			if((strstr((const char*)USART2_RX_BUF,"}"))!=NULL)
+			{
+				json_start = strStr((const char*)USART2_RX_BUF, "{");
+				json_end = strStr((const char*)USART2_RX_BUF, "}");
+				
+				memcpy(json_parse,USART2_RX_BUF+json_start,json_end-json_start+1);
+				RS485SENDFLAG=1;
 //			printf((const char*)json_parse,"\r\n");
 //			printf("\r\n");
+			}
 		}
 	}
+	
+
 		
 		
 	parsePlatformJson(json_parse);
@@ -221,35 +230,119 @@ void getPlatformJson(void)
 //}
 
 
-char * makeJson()
+char *myitoa(int value, char *string, int radix)
+{
+    int     i, d;
+    int     flag = 0;
+    char    *ptr = string;
+ 
+    /* This implementation only works for decimal numbers. */
+    if (radix != 10)
+    {
+        *ptr = 0;
+        return string;
+    }
+ 
+    if (!value)
+    {
+        *ptr++ = 0x30;
+        *ptr = 0;
+        return string;
+    }
+ 
+    /* if this is a negative value insert the minus sign. */
+    if (value < 0)
+    {
+        *ptr++ = '-';
+ 
+        /* Make the value positive. */
+        value *= -1;
+    }
+ 
+    for (i = 10000; i > 0; i /= 10)
+    {
+        d = value / i;
+ 
+        if (d || flag)
+        {
+            *ptr++ = (char)(d + 0x30);
+            value -= (d * i);
+            flag = 1;
+        }
+    }
+ 
+    /* Null terminate the string. */
+    *ptr = 0;
+ 
+    return string;
+ 
+}
+
+char * makeJson(u8 *buf,u8 pos)
 {
     char* str = NULL;
-
+	int i;
     /* 创建一个JSON数据对象(链表头结点) */
     cJSON* cjson_root = cJSON_CreateObject();
 
+	memset(json_raw_data,0,512);
 //	sprintf(print,"%x",p_command.parse_controller_id); 
 //	itoa(p_command.parse_controller_id,str,16);
     /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
-//    cJSON_AddStringToObject(cjson_root, "controller_id", rs_command.send.parse_controller_id);
+//  cJSON_AddStringToObject(cjson_root, "controller_id", rs_command.send.parse_controller_id);
 //	cJSON_AddStringToObject(cjson_root, "circuit_id", rs_command.send.parse_circuit_id);
 	
-	cJSON_AddStringToObject(cjson_root, "controller_id", "1");
+//	cJSON_AddStringToObject(cjson_root, "controller_id", "1");
 //	cJSON_AddStringToObject(cjson_root, "circuit_id", "2");
 	
-//	sprintf(print,"%x",p_command.parse_circuit_id); 
-//    /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
-//    cJSON_AddStringToObject(cjson_root, "circuit_id", print);
-//	
-//	sprintf(print,"%x",p_command.parse_start_component_id); 
-//    /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
-//    cJSON_AddStringToObject(cjson_root, "start_component_id", print);
-//	
-//	sprintf(print,"%x",p_command.parse_end_component_id); 
-//    /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
-//    cJSON_AddStringToObject(cjson_root, "parse_end_component_id", print);
-//	
-//	cJSON_AddStringToObject(cjson_root, "raw_data", MQTTSend);
+	sprintf(print,"%d",rs_command.controller_id); 
+    /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
+    cJSON_AddStringToObject(cjson_root, "controller_id", print);
+	
+	sprintf(print,"%d",p_command.parse_circuit_id); 
+    /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
+    cJSON_AddStringToObject(cjson_root, "circuit_id", print);
+	
+	sprintf(print,"%d",p_command.parse_start_component_id); 
+    /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
+    cJSON_AddStringToObject(cjson_root, "start_component_id", print);
+	
+	sprintf(print,"%d",(rs_command.total/2)-1+p_command.parse_start_component_id); 
+    /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
+    cJSON_AddStringToObject(cjson_root, "end_component_id", print);
+	
+	printf("RS485RECV: ");
+	for (i = 3; i < pos; ++i)
+    {
+		memset(num,0,2);
+//		printf("%02x",buf[i]);
+		sprintf(num,"%02x",buf[i]);
+//		printf("%s\r\n",num);
+		
+//		myitoa(buf[i],num,10);
+		strncat(json_raw_data,num,2);
+		
+    }
+	printf("\r\n");
+//	sprintf(json_raw_data,"%02x",buf);
+//	printf("MQTTSEND[256]: ");
+//	for(MQTTSendCount=0;MQTTSendCount<sizeof(MQTTSend);MQTTSendCount++)
+//	{
+//		printf("%02x ",MQTTSend[MQTTSendCount]);
+//		sprintf(print,"%02x",MQTTSend[MQTTSendCount]);
+//		strncat(json_raw_data,print,1);
+//		
+//	}
+//	for (i = 0; i < pos; ++i)
+//    {
+//		sprintf(print,"%02x",buf[i]);
+//		strncat(json_raw_data,print,1);
+//    }	
+	printf("json_raw_data: ");
+	printf("%s",json_raw_data);
+	printf("\r\n");
+	memset(MQTTSend,0,sizeof(MQTTSend));
+	cJSON_AddStringToObject(cjson_root, "raw_data", json_raw_data);
 //    /* 添加一条整数类型的JSON数据(添加一个链表节点) */
 //    cJSON_AddNumberToObject(cjson_root, "age", 22);
 
@@ -282,9 +375,14 @@ char * makeJson()
 
     /* 打印JSON对象(整条链表)的所有数据 */
     str = cJSON_Print(cjson_root);
-    printf("%s\n", str);
+	
+	if(EC20_MQTT_SEND_DATA_qqq((u8 *)str)==0) printf("数据发送成功\r\n");;//TCP
+//    printf("%s\n", str);
+//	memcpy(json_send,str,sizeof(str));
 
 	cJSON_Delete(cjson_root);
+	cJSON_free(str);
+	free(str);
 	
     return str;
 }
@@ -339,7 +437,7 @@ void RS485_PackandSend()
 	bufferSendPushByte(0x03);
 	bufferSendPushByte(p_command.parse_circuit_id);
 	bufferSendPushByte(p_command.parse_start_component_id);
-	u16converter.u16val = EndianSwap16(p_command.parse_end_component_id);
+	u16converter.u16val = EndianSwap16(p_command.parse_count);
 	copyU16ToU8ArrayToBufferSend(u16converter.u8array);
 	u16converter.u16val = crc16(RS485SEND,RS485SendLength);
 	u16converter.u16val = EndianSwap16(u16converter.u16val);
@@ -357,7 +455,7 @@ void RS485_PackandSend()
 	
 }
 
-void RS485_RecvAndParse(u8 *buf)
+u8* RS485_RecvAndParse(u8 *buf)
 {
 	union U16ToU8Array u16converter;
 	int i;
@@ -367,19 +465,29 @@ void RS485_RecvAndParse(u8 *buf)
 	rs_command.total = buf[pos];
 	pos+=rs_command.total+1;
 	rs_command.crc = (buf[pos] << 8) + buf[pos + 1];
+	pos+=2;
 	u16converter.u16val = crc16(buf,rs_command.total+3);
 	if(rs_command.crc == u16converter.u16val)	MQTTSendFlag=1;
+	
+	makeJson(buf,pos-2);
+	
+	
+	return buf;
 
 //	printf("RS485RECV: ");
-//	for (i = 3; i < rs_command.total; ++i)
+//	for (i = 0; i < pos; ++i)
 //    {
 //		printf("%02x ",buf[i]);
 //    }
 //	printf("\r\n");
-	for (i = 3; i < rs_command.total; ++i) MQTTSend[i]=buf[i-3];
+//	for (i = 3; i < rs_command.total; ++i) MQTTSend[i-3]=buf[i];
 	
+//	for (i = 0; i < pos; i++) MQTTSend[i]=buf[i];
+////	
+//	printf("MQTTSend:::  ");
+//	for(i=0;i<sizeof(MQTTSend);i++) printf("%02x ",MQTTSend[i]);
+//    printf("\r\n");
 	
-    
 //	rs_command.end_component_id = (buf[pos+1] << 8) + buf[pos+2];
 //	rs_command.end_component_id=EndianSwap16(rs_command.end_component_id);
 //	printf(" \r\n %02x %02x %04x \r\n ",rs_command.controller_id, rs_command.total,rs_command.crc);
@@ -402,18 +510,25 @@ void RS485_Process()
 	}
 }
 
+void check_mqtt_connection()
+{
+	
+}
 void MQTT_Process()
 {
 	if(USART2_RX_STA&0X8000)		//接收到数据
 	{
+		printf((const char*)USART2_RX_BUF,"\r\n");
 		getPlatformJson();
-
+		check_mqtt_connection();
 		memset(USART2_RX_BUF,0,sizeof(USART2_RX_BUF));
 	}
 	
 	if(MQTTSendFlag==1)
 	{
-		if(EC20_MQTT_SEND_DATA_qqq((u8 *)makeJson())==0) printf("数据发送成功\r\n");;//TCP
+//		if(EC20_MQTT_SEND_DATA_qqq((u8 *)makeJson())==0) printf("数据发送成功\r\n");;//TCP
+//		if(EC20_MQTT_SEND_DATA_qqq((u8 *)json_send)==0) printf("数据发送成功\r\n");;//TCP
+//		makeJson();
 		printf("RS485 received \r\n");
 		MQTTSendFlag = 0;
 	}

@@ -24,7 +24,7 @@ u8 res=1;
 //#define DEVICENAME   "LX4GCSIC"
 //#define DEVICESECRET   "EOQp6uOKiHUMwl52FFBELoG2pKqJSTja"
 
-#define PRODUCTKEY "client1"
+#define PRODUCTKEY "client2"
 #define DEVICENAME   "zxiat"
 #define DEVICESECRET   "zxiat135246"
 
