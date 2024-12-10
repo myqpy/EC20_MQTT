@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_HD,USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\APP;..\STM32F10x_FWLib\inc;..\CM3;..\HARDWARE\LED;..\HARDWARE\KEY;..\HARDWARE\OLED;..\HARDWARE\USART2;..\SIM800C;..\HARDWARE\USART4;..\LCD5110;..\HTTP;..\HARDWARE\EC20;..\HARDWARE\MODBUS;..\SYSTEM\bsp_uart</IncludePath>
+              <IncludePath>..\SYSTEM\delay;..\SYSTEM\sys;..\APP;..\STM32F10x_FWLib\inc;..\CM3;..\HARDWARE\LED;..\HARDWARE\KEY;..\HARDWARE\OLED;..\HARDWARE\USART2;..\SIM800C;..\HARDWARE\USART4;..\LCD5110;..\HTTP;..\HARDWARE\EC20;..\HARDWARE\MODBUS;..\SYSTEM\bsp_uart;..\SYSTEM\CJSON;..\APP</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -398,6 +398,11 @@
               <FileName>system_stm32f10x.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\system_stm32f10x.c</FilePath>
+            </File>
+            <File>
+              <FileName>service.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\service.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -503,6 +508,21 @@
               <FileName>stm32f10x_dma.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\STM32F10x_FWLib\src\stm32f10x_dma.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>cJson</GroupName>
+          <Files>
+            <File>
+              <FileName>cJSON.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SYSTEM\CJSON\cJSON.c</FilePath>
+            </File>
+            <File>
+              <FileName>cJSON_Utils.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\SYSTEM\CJSON\cJSON_Utils.c</FilePath>
             </File>
           </Files>
         </Group>

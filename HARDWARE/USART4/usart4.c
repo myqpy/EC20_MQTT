@@ -132,7 +132,7 @@ void RS485_Receive_Data(u8 *buf,u8 *len)
         for(i=0; i<rxlen; i++)
         {
             buf[i]=RS485_RX_BUF[i];
-			Usart_SendByte(USART1, buf[i]);	
+//			Usart_SendByte(USART1, buf[i]);	
         }
 		RS485_received = 1;
 //		printf("%d ",RS485_RX_CNT);

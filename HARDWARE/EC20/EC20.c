@@ -130,22 +130,31 @@ u8 EC20_CONNECT_MQTT_SERVER(u8 *PRODUCTKEY,u8 *DEVICENAME,u8 *DEVICESECRET)
 
     //配置进入阿里云
     memset(AtStrBuf,0,BUFLEN);
-    sprintf(AtStrBuf,"AT+QMTCFG=\"ALIAUTH\",0,\"%s\",\"%s\",\"%s\"\r\n",PRODUCTKEY,DEVICENAME,DEVICESECRET);
-    if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"OK",1000))	 return 6;
+//    sprintf(AtStrBuf,"AT+QMTCFG=\"ALIAUTH\",0,\"%s\",\"%s\",\"%s\"\r\n",PRODUCTKEY,DEVICENAME,DEVICESECRET);
+//	sprintf(AtStrBuf,"AT+QMTCFG=0,\"%s\",\"%s\",\"%s\"\r\n",PRODUCTKEY,DEVICENAME,DEVICESECRET);
+//    if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"OK",1000))	 return 6;
+	
     //打开阿里云的连接，需要比较久的时间
-    if(EC20_send_cmd((u8 *)"AT+QMTOPEN=0,\"iot-as-mqtt.cn-shanghai.aliyuncs.com\",1883",(u8 *)"+QMTOPEN: 0,0",3000)) return 7;
+//    if(EC20_send_cmd((u8 *)"AT+QMTOPEN=0,\"113.45.254.107\",1883",(u8 *)"+QMTOPEN: 0,0",3000)) return 7;
+	if(EC20_send_cmd((u8 *)"AT+QMTOPEN=1,\"113.45.254.107\",1883",(u8 *)"+QMTOPEN: 1,0",3000)) return 7;
 
-    //连接到阿里云设备
+//    //连接到阿里云设备
     memset(AtStrBuf,0,BUFLEN);
-    sprintf(AtStrBuf,"AT+QMTCONN=0,\"%s\"\r\n",DEVICENAME);
-    if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTCONN: 0,0,0",1000))	 return 8;
+//	sprintf(AtStrBuf,"AT+QMTCONN=0,\"%s\",\"%s\",\"%s\"\r\n",PRODUCTKEY,DEVICENAME,DEVICESECRET);
+	sprintf(AtStrBuf,"AT+QMTCONN=1,\"%s\",\"%s\",\"%s\"\r\n",PRODUCTKEY,DEVICENAME,DEVICESECRET);
+//    sprintf(AtStrBuf,"AT+QMTCONN=0,\"%s\"\r\n",DEVICENAME);
+//    if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTCONN: 0,0,0",1000))	 return 8;
+	if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTCONN: 1,0,0",1000))	 return 8;
 
-    //订阅到阿里云
+//    //订阅到阿里云
     memset(AtStrBuf,0,BUFLEN);
-    sprintf(AtStrBuf,"AT+QMTSUB=0,1,\"/%s/%s/user/get\",0 \r\n",PRODUCTKEY,DEVICENAME);
-    if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTSUB: 0,1,0,1",1000))	 return 9;
-
-    printf("设备已经连接到阿里云,准备发送数据 [..]\r\n");
+//    sprintf(AtStrBuf,"AT+QMTSUB=0,1,\"testtopic/#\",0 \r\n");
+	sprintf(AtStrBuf,"AT+QMTSUB=1,1,\"testtopic/#\",0 \r\n");
+//    sprintf(AtStrBuf,"AT+QMTSUB=0,1,\"/%s/%s/user/get\",0 \r\n",PRODUCTKEY,DEVICENAME);
+//    if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTSUB: 0,1,0,1",1000))	 return 9;
+//	if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTSUB: 0,1,0,0",1000))	 return 9;
+	if(EC20_send_cmd((u8 *)AtStrBuf,(u8 *)"+QMTSUB: 1,1,0,0",1000))	 return 9;
+//    printf("设备已经连接到阿里云,准备发送数据 [..]\r\n");
     return 0;
 }
 
@@ -178,8 +187,22 @@ u8 EC20_MQTT_SEND_DATA(u8 *PRODUCTKEY,u8 *DEVICENAME,u8 *DATA)
 {
     memset(AtStrBuf,0,BUFLEN); //发送数据命令
     //AT+QMTPUB=0,0,0,0,"/sys/a18dtRetCT0/BC26TEST/thing/event/property/post"
-    sprintf(AtStrBuf,"AT+QMTPUB=0,0,0,0,\"/sys/%s/%s/thing/event/property/post\"\r\n",PRODUCTKEY,DEVICENAME);
-    if(EC20_send_cmd((u8 *)AtStrBuf,">",100))             return 1;
+    sprintf(AtStrBuf,"AT+QMTPUB=1,0,0,0,\"/sys/%s/%s/thing/event/property/post\"\r\n",PRODUCTKEY,DEVICENAME);
+//    sprintf(AtStrBuf,"AT+QMTPUBEX=1,0,0,0,\"testtopic/1\"");
+	if(EC20_send_cmd((u8 *)AtStrBuf,">",100))             return 1;
+    if(EC20_send_cmd(DATA,NULL,0))                  return 2;
+    if(EC20_send_cmd((u8 *)0x1A,(u8 *)"OK",1500))   return 3;
+    printf("用户数据发送成功  [OK]\r\n");
+    return 0;
+}
+
+u8 EC20_MQTT_SEND_DATA_qqq(u8 *DATA)
+{
+    memset(AtStrBuf,0,BUFLEN); //发送数据命令
+    //AT+QMTPUB=0,0,0,0,"/sys/a18dtRetCT0/BC26TEST/thing/event/property/post"
+//    sprintf(AtStrBuf,"AT+QMTPUB=1,0,0,0,\"/sys/%s/%s/thing/event/property/post\"\r\n",PRODUCTKEY,DEVICENAME);
+    sprintf(AtStrBuf,"AT+QMTPUBEX=1,0,0,0,\"testtopic/1\"");
+	if(EC20_send_cmd((u8 *)AtStrBuf,">",100))             return 1;
     if(EC20_send_cmd(DATA,NULL,0))                  return 2;
     if(EC20_send_cmd((u8 *)0x1A,(u8 *)"OK",1500))   return 3;
     printf("用户数据发送成功  [OK]\r\n");

@@ -24,6 +24,7 @@ extern u8 Flag_Rec_Message;	//收到短信标示
 extern u8 EC20_INIT(void);
 u8 EC20_CONNECT_SERVER_CFG_INFOR(u8 *PRODUCTKEY,u8 *DEVICENAME,u8 *DEVICESECRET);
 extern u8 EC20_MQTT_SEND_DATA(u8 *PRODUCTKEY,u8 *DEVICENAME,u8 *DATA);
+extern u8 EC20_MQTT_SEND_DATA_qqq(u8 *DATA);
 extern u8 EC20_MQTT_SEND_AUTO(u8 *PRODUCTKEY,u8 *DEVICENAME);
 void check_cmd(void);
 u8 EC20_send_cmd(u8 *cmd,u8 *ack,u16 waittime);
