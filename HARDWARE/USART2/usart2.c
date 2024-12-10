@@ -27,6 +27,7 @@ void USART2_IRQHandler(void)
 	u8 res;	    
 if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET)//接收到数据
 	{	 
+//		USART_ClearFlag(USART2, USART_FLAG_TC);
 		res =USART_ReceiveData(USART2);				 
 		if(USART2_RX_STA<USART2_MAX_RECV_LEN)		//还可以接收数据
 		{

@@ -34,13 +34,13 @@ u8* EC20_check_cmd(u8 *str)
     return (u8*)strx;
 }
 
-void check_cmd(void)
-{
-    if(USART2_RX_STA&0X8000)		//接收到一次数据了
-    {
-        USART2_RX_BUF[USART2_RX_STA&0X7FFF]=0;//添加结束符
-    }
-}
+//void check_cmd(void)
+//{
+//    if(USART2_RX_STA&0X8000)		//接收到一次数据了
+//    {
+//        USART2_RX_BUF[USART2_RX_STA&0X7FFF]=0;//添加结束符
+//    }
+//}
 
 //向EC20发送命令
 //cmd:发送的命令字符串(不需要添加回车了),当cmd<0XFF的时候,发送数字(比如发送0X1A),大于的时候发送字符串.
@@ -65,6 +65,7 @@ u8 EC20_send_cmd(u8 *cmd,u8 *ack,u16 waittime)
             delay_ms(10);
             if(USART2_RX_STA&0X8000)//接收到期待的应答结果
             {
+				USART2_RX_BUF[USART2_RX_STA&0X7FFF]=0;//添加结束符
                 if(EC20_check_cmd(ack))break;//得到有效数据
                 USART2_RX_STA=0;
             }
